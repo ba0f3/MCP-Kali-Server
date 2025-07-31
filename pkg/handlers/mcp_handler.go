@@ -125,6 +125,19 @@ func Enum4linuxScanHandler(ctx context.Context, ss *mcp.ServerSession, params *m
 	}, nil
 }
 
+// NucleiScanHandler handles Nuclei scan requests
+func NucleiScanHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[tools.NucleiParams]) (*mcp.CallToolResultFor[any], error) {
+	result, err := tools.NucleiScan(params.Arguments)
+	if err != nil {
+		return nil, err
+	}
+	return &mcp.CallToolResultFor[any]{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: formatToolResult(result)},
+		},
+	}, nil
+}
+
 // ExecuteCommandHandler handles generic command execution requests
 func ExecuteCommandHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[tools.GenericCommandParams]) (*mcp.CallToolResultFor[any], error) {
 	result, err := tools.ExecuteGenericCommand(params.Arguments)
@@ -186,6 +199,11 @@ func InitializeServer() *mcp.Server {
 		Name:        "enum4linux_scan",
 		Description: "Execute Enum4linux Windows/Samba enumeration tool",
 	}, Enum4linuxScanHandler)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "nuclei_scan",
+		Description: "Execute Nuclei template-based vulnerability scanner",
+	}, NucleiScanHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "execute_command",

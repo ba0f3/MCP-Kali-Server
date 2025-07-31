@@ -45,6 +45,7 @@ func main() {
 	log.Println("  - john_crack")
 	log.Println("  - wpscan_analyze")
 	log.Println("  - enum4linux_scan")
+	log.Println("  - nuclei_scan")
 	log.Println("  - execute_command")
 	log.Println("=====================================")
 
@@ -104,6 +105,12 @@ func main() {
 		Name:        "enum4linux_scan",
 		Description: "Execute Enum4linux Windows/Samba enumeration tool",
 	}, handlers.Enum4linuxScanHandler)
+
+	// Add Nuclei tool
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "nuclei_scan",
+		Description: "Execute Nuclei template-based vulnerability scanner",
+	}, handlers.NucleiScanHandler)
 
 	// Add generic command execution tool
 	mcp.AddTool(server, &mcp.Tool{
