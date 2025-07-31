@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/ba0f3/MCP-Kali-Server/pkg/handlers"
@@ -14,6 +15,7 @@ import (
 func main() {
 	var (
 		debug = flag.Bool("debug", false, "Enable debug logging")
+		httpAddr = flag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
 	)
 	flag.Parse()
 
@@ -84,17 +86,22 @@ func main() {
 		Description: "Execute an arbitrary command on the Kali server",
 	}, handlers.ExecuteCommandHandler)
 
-	log.Println("Starting MCP Server with Kali Linux tools...")
 
-	// Use stdio transport for MCP communication
-	var t mcp.Transport
-	t = mcp.NewStdioTransport()
-	if *debug {
-		t = mcp.NewLoggingTransport(t, os.Stderr)
-	}
 
-	// Start the MCP server
-	if err := server.Run(context.Background(), t); err != nil {
-		log.Fatalf("Failed to start MCP server: %v", err)
+	if *httpAddr != "" {
+		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+			return server
+		}, nil)
+		log.Printf("Starting MCP Server with Kali Linux tools and listening at %s", *httpAddr)
+		if err := http.ListenAndServe(*httpAddr, handler); err != nil {
+			log.Fatalf("Failed to start HTTP server: %v", err)
+		}
+	} else {
+		log.Println("Starting MCP Server with Kali Linux tools...")
+		// Use stdio transport for MCP communication
+		t := mcp.NewLoggingTransport(mcp.NewStdioTransport(), os.Stderr)
+		if err := server.Run(context.Background(), t); err != nil {
+			log.Printf("Server failed: %v", err)
+		}
 	}
 }
