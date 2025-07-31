@@ -28,13 +28,20 @@ func GobusterScan(params GobusterParams) (*ToolResult, error) {
 		params.Wordlist = "/usr/share/wordlists/dirb/common.txt"
 	}
 
+	var url string
+	if params.Mode == "dns" {
+		url = "-do " + params.URL
+	} else {
+		url = "-u " + params.URL
+	}
+
 	// Validate mode
 	validModes := map[string]bool{"dir": true, "dns": true, "fuzz": true, "vhost": true}
 	if !validModes[params.Mode] {
 		return nil, fmt.Errorf("invalid mode: %s. Must be one of: dir, dns, fuzz, vhost", params.Mode)
 	}
 
-	command := fmt.Sprintf("gobuster %s -u %s -w %s", params.Mode, params.URL, params.Wordlist)
+	command := fmt.Sprintf("gobuster %s %s -w %s", params.Mode, url, params.Wordlist)
 	if params.AdditionalArgs != "" {
 		command += fmt.Sprintf(" %s", params.AdditionalArgs)
 	}
