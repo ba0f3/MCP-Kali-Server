@@ -125,6 +125,19 @@ func Enum4linuxScanHandler(ctx context.Context, ss *mcp.ServerSession, params *m
 	}, nil
 }
 
+// PingHandler handles ping requests
+func PingHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[tools.PingParams]) (*mcp.CallToolResultFor[any], error) {
+	result, err := tools.Ping(params.Arguments)
+	if err != nil {
+		return nil, err
+	}
+	return &mcp.CallToolResultFor[any]{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: formatToolResult(result)},
+		},
+	}, nil
+}
+
 // NucleiScanHandler handles Nuclei scan requests
 func NucleiScanHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[tools.NucleiParams]) (*mcp.CallToolResultFor[any], error) {
 	result, err := tools.NucleiScan(params.Arguments)
@@ -199,6 +212,11 @@ func InitializeServer() *mcp.Server {
 		Name:        "enum4linux_scan",
 		Description: "Execute Enum4linux Windows/Samba enumeration tool",
 	}, Enum4linuxScanHandler)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ping",
+		Description: "Execute ping to test network connectivity",
+	}, PingHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "nuclei_scan",

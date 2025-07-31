@@ -45,6 +45,7 @@ func main() {
 	log.Println("  - john_crack")
 	log.Println("  - wpscan_analyze")
 	log.Println("  - enum4linux_scan")
+	log.Println("  - ping")
 	log.Println("  - nuclei_scan")
 	log.Println("  - execute_command")
 	log.Println("=====================================")
@@ -105,6 +106,12 @@ func main() {
 		Name:        "enum4linux_scan",
 		Description: "Execute Enum4linux Windows/Samba enumeration tool",
 	}, handlers.Enum4linuxScanHandler)
+
+	// Add Ping tool
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ping",
+		Description: "Execute ping to test network connectivity",
+	}, handlers.PingHandler)
 
 	// Add Nuclei tool
 	mcp.AddTool(server, &mcp.Tool{
