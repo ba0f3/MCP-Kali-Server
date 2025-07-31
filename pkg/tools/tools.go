@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ba0f3/MCP-Kali-Server/pkg/executor"
+	"github.com/ba0f3/MCP-Kali-Server/pkg/security"
 )
 
 // ToolResult represents the result of a tool execution
@@ -91,7 +92,13 @@ func GobusterScan(params GobusterParams) (*ToolResult, error) {
 		return nil, fmt.Errorf("invalid mode: %s. Must be one of: dir, dns, fuzz, vhost", params.Mode)
 	}
 
-	command := fmt.Sprintf("gobuster %s -u %s -w %s", params.Mode, params.URL, params.Wordlist)
+	// if URL not starts with https://, replace -u with -do
+	if params.Mode == "dns" {
+		params.URL = "-do " + params.URL
+	} else {
+		params.URL = "-u " + params.URL
+	}
+	command := fmt.Sprintf("gobuster %s %s -w %s", params.Mode, params.URL, params.Wordlist)
 	if params.AdditionalArgs != "" {
 		command += fmt.Sprintf(" %s", params.AdditionalArgs)
 	}
@@ -243,7 +250,7 @@ func HydraAttack(params HydraParams) (*ToolResult, error) {
 		return nil, fmt.Errorf("password or password_file parameter is required")
 	}
 
-	command := fmt.Sprintf("hydra -t 4")
+	command := "hydra -t 4"
 
 	if params.Username != "" {
 		command += fmt.Sprintf(" -l %s", params.Username)
@@ -297,7 +304,7 @@ func JohnCrack(params JohnParams) (*ToolResult, error) {
 		params.Wordlist = "/usr/share/wordlists/rockyou.txt"
 	}
 
-	command := fmt.Sprintf("john")
+	command := "john"
 
 	if params.Format != "" {
 		command += fmt.Sprintf(" --format=%s", params.Format)
@@ -414,22 +421,28 @@ func NucleiScan(params NucleiParams) (*ToolResult, error) {
 		return nil, fmt.Errorf("target parameter is required")
 	}
 
+	// Sanitize arguments
+	params.Target = security.SanitizeInput(params.Target)
+	params.Templates = security.SanitizeInput(params.Templates)
+	params.Tags = security.SanitizeInput(params.Tags)
+	params.AdditionalArgs = security.SanitizeInput(params.AdditionalArgs)
+
 	// Build command
 	command := "nuclei"
-	
+
 	// Add target
 	command += fmt.Sprintf(" -u %s", params.Target)
-	
+
 	// Add templates if specified
 	if params.Templates != "" {
 		command += fmt.Sprintf(" -t %s", params.Templates)
 	}
-	
+
 	// Add severity filter if specified
 	if params.Severity != "" {
 		// Validate severity levels
 		validSeverities := map[string]bool{
-			"info": true, "low": true, "medium": true, 
+			"info": true, "low": true, "medium": true,
 			"high": true, "critical": true,
 		}
 		if validSeverities[params.Severity] {
@@ -438,15 +451,15 @@ func NucleiScan(params NucleiParams) (*ToolResult, error) {
 			return nil, fmt.Errorf("invalid severity level: %s. Must be one of: info, low, medium, high, critical", params.Severity)
 		}
 	}
-	
+
 	// Add tags filter if specified
 	if params.Tags != "" {
 		command += fmt.Sprintf(" -tags %s", params.Tags)
 	}
-	
+
 	// Add default flags for better output
 	command += " -silent -no-interactsh"
-	
+
 	// Add any additional arguments
 	if params.AdditionalArgs != "" {
 		command += fmt.Sprintf(" %s", params.AdditionalArgs)
