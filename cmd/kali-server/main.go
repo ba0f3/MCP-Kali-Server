@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Wh0am123/MCP-Kali-Server/pkg/handlers"
+	"github.com/ba0f3/MCP-Kali-Server/pkg/handlers"
 	"github.com/gin-gonic/gin"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )

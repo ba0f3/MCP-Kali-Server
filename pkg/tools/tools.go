@@ -2,7 +2,8 @@ package tools
 
 import (
 	"fmt"
-	"github.com/Wh0am123/MCP-Kali-Server/pkg/executor"
+
+	"github.com/ba0f3/MCP-Kali-Server/pkg/executor"
 )
 
 // ToolResult represents the result of a tool execution

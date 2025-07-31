@@ -1,4 +1,4 @@
-module github.com/Wh0am123/MCP-Kali-Server
+module github.com/ba0f3/MCP-Kali-Server
 
 go 1.24.5
 
