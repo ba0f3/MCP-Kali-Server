@@ -57,6 +57,36 @@ SERVER_MODE=gin go run ./cmd/kali-server
 
 The server starts on port 5000 by default and hosts multiple endpoints for tool operations.
 
+## Authentication
+
+The HTTP server supports authentication to protect your endpoints. Authentication is configured through environment variables:
+
+- `AUTH_SECRET`: The secret key/token for authentication (required to enable auth)
+- `AUTH_TYPE`: The authentication method - either `apikey` (default) or `bearer`
+
+### API Key Authentication (default)
+Set the secret and include it in requests:
+```bash
+# Set the secret
+export AUTH_SECRET=your-secret-key
+
+# Include in header
+curl -H "X-API-Key: your-secret-key" http://localhost:5000/api/tools/nmap -d '{...}'
+
+# Or as query parameter
+curl http://localhost:5000/api/tools/nmap?api_key=your-secret-key -d '{...}'
+```
+
+### Bearer Token Authentication
+```bash
+# Set auth type and secret
+export AUTH_TYPE=bearer
+export AUTH_SECRET=your-bearer-token
+
+# Include in Authorization header
+curl -H "Authorization: Bearer your-bearer-token" http://localhost:5000/api/tools/nmap -d '{...}'
+```
+
 ## Usage
 
 ### Example Commands
