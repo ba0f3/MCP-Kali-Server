@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,14 +18,23 @@ import (
 func main() {
 	// Define command-line flags
 	timeout := flag.Int("timeout", 180, "Command execution timeout in seconds")
+	port := flag.Int("port", 5000, "Port to listen on")
 	flag.Parse()
 
 	// Set the global command timeout
 	executor.SetGlobalTimeout(time.Duration(*timeout) * time.Second)
-	log.Printf("Command timeout set to %d seconds", *timeout)
 
 	// Determine mode of the server from environment variable or configuration
 	mode := os.Getenv("SERVER_MODE")
+	if mode == "" {
+		mode = "gin" // default to Gin HTTP mode
+	}
+
+	// Print server configuration
+	log.Println("=== MCP-Kali-Server Configuration ===")
+	log.Printf("Server Mode: %s", mode)
+	log.Printf("Command Timeout: %d seconds", *timeout)
+	log.Printf("Port: %d", *port)
 
 	if mode == "mcp" {
 		// Create the MCP server
@@ -37,8 +47,8 @@ func main() {
 		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, nil)
 
 		// Start the MCP server
-		log.Printf("Starting MCP streamable HTTP server on port 5000")
-		if err := http.ListenAndServe(":5000", handler); err != nil {
+		log.Printf("Starting MCP streamable HTTP server on port %d", *port)
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), handler); err != nil {
 			log.Fatalf("Could not start MCP server: %v", err)
 		}
 	} else {
@@ -49,11 +59,13 @@ func main() {
 		// Configure authentication
 		authConfig := middleware.NewAuthConfig()
 		if authConfig != nil {
-			log.Printf("Authentication enabled with %s method", authConfig.AuthType)
+			log.Printf("Authentication: Enabled (%s)", authConfig.AuthType)
 			r.Use(middleware.AuthMiddleware(authConfig))
 		} else {
-			log.Println("WARNING: No authentication configured. Set AUTH_SECRET environment variable to enable authentication.")
+			log.Println("Authentication: Disabled (No AUTH_SECRET set)")
+			log.Println("WARNING: Server is running without authentication!")
 		}
+		log.Println("=====================================")
 
 		// Setup routes
 		r.POST("/api/command", handlers.GenericCommandHandler)
@@ -71,8 +83,8 @@ func main() {
 		r.GET("/health", handlers.HealthCheckHandler)
 
 		// Start the Gin server
-		log.Printf("Starting Gin HTTP server on port 5000")
-		if err := r.Run(":5000"); err != nil {
+		log.Printf("Starting Gin HTTP server on port %d", *port)
+		if err := r.Run(fmt.Sprintf(":%d", *port)); err != nil {
 			log.Fatalf("Could not start Gin server: %v", err)
 		}
 	}

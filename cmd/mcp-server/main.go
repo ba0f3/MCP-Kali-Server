@@ -22,13 +22,31 @@ func main() {
 	)
 	flag.Parse()
 
-	if *debug {
-		log.Println("Debug mode enabled")
-	}
-
 	// Set the global command timeout
 	executor.SetGlobalTimeout(time.Duration(*timeout) * time.Second)
-	log.Printf("Command timeout set to %d seconds", *timeout)
+
+	// Print server configuration
+	log.Println("=== MCP-Kali-Server Configuration ===")
+	log.Println("Server Mode: MCP")
+	log.Printf("Command Timeout: %d seconds", *timeout)
+	log.Printf("Debug Mode: %v", *debug)
+	if *httpAddr != "" {
+		log.Printf("HTTP Address: %s", *httpAddr)
+	} else {
+		log.Println("Transport: stdio")
+	}
+	log.Println("Available Tools:")
+	log.Println("  - nmap_scan")
+	log.Println("  - gobuster_scan")
+	log.Println("  - dirb_scan")
+	log.Println("  - nikto_scan")
+	log.Println("  - sqlmap_scan")
+	log.Println("  - hydra_attack")
+	log.Println("  - john_crack")
+	log.Println("  - wpscan_analyze")
+	log.Println("  - enum4linux_scan")
+	log.Println("  - execute_command")
+	log.Println("=====================================")
 
 	// Initialize MCP server
 	server := mcp.NewServer(&mcp.Implementation{Name: "kali-tools"}, nil)

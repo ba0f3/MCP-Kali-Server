@@ -47,15 +47,38 @@ go mod tidy
 
 ```bash
 go run ./cmd/mcp-server -debug
+
+# With custom timeout (in seconds)
+go run ./cmd/mcp-server -timeout=300
+
+# With HTTP endpoint
+go run ./cmd/mcp-server -http=:8080
 ```
 
 #### HTTP Mode
 
 ```bash
 SERVER_MODE=gin go run ./cmd/kali-server
+
+# With custom timeout (in seconds)
+go run ./cmd/kali-server -timeout=300
+
+# With custom port
+go run ./cmd/kali-server -port=8080
 ```
 
-The server starts on port 5000 by default and hosts multiple endpoints for tool operations.
+The server starts on port 5000 by default (configurable with `-port` flag) and hosts multiple endpoints for tool operations.
+
+## Command-line Flags
+
+### kali-server
+- `-port`: Port to listen on (default: 5000)
+- `-timeout`: Command execution timeout in seconds (default: 180)
+
+### mcp-server
+- `-debug`: Enable debug logging (default: false)
+- `-http`: HTTP address to listen on instead of stdio (e.g., ":8080")
+- `-timeout`: Command execution timeout in seconds (default: 180)
 
 ## Authentication
 
