@@ -18,7 +18,7 @@ func main() {
 	var (
 		debug = flag.Bool("debug", false, "Enable debug logging")
 		httpAddr = flag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
-		timeout = flag.Int("timeout", 180, "Command execution timeout in seconds")
+		timeout = flag.Int("timeout", 900, "Command execution timeout in seconds")
 	)
 	flag.Parse()
 

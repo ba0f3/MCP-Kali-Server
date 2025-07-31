@@ -17,7 +17,7 @@ import (
 
 func main() {
 	// Define command-line flags
-	timeout := flag.Int("timeout", 180, "Command execution timeout in seconds")
+	timeout := flag.Int("timeout", 900, "Command execution timeout in seconds")
 	port := flag.Int("port", 5000, "Port to listen on")
 	flag.Parse()
 
