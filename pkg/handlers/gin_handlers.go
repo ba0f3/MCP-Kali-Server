@@ -409,6 +409,79 @@ func Enum4linuxHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+func Sublist3rHandler(c *gin.Context) {
+	var data map[string]interface{}
+	if err := c.BindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request."})
+		return
+	}
+
+	domain := getStringParam(data, "domain", "")
+	if domain == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Domain parameter is required"})
+		return
+	}
+
+	// Safely get boolean values
+	bruteForce := false
+	if val, ok := data["bruteforce"]; ok {
+		if bVal, ok := val.(bool); ok {
+			bruteForce = bVal
+		}
+	}
+
+	ports := getStringParam(data, "ports", "")
+	
+	// Safely get threads value
+	threads := 0
+	if val, ok := data["threads"]; ok {
+		if fVal, ok := val.(float64); ok {
+			threads = int(fVal)
+		}
+	}
+	
+	engines := getStringParam(data, "engines", "")
+	
+	// Safely get verbose value
+	verbose := false
+	if val, ok := data["verbose"]; ok {
+		if bVal, ok := val.(bool); ok {
+			verbose = bVal
+		}
+	}
+	additionalArgs := getStringParam(data, "additional_args", "")
+
+	command := fmt.Sprintf("sublist3r -d %s", domain)
+	if bruteForce {
+		command += " -b"
+	}
+	if ports != "" {
+		command += fmt.Sprintf(" -p %s", ports)
+	}
+	if threads > 0 {
+		command += fmt.Sprintf(" -t %d", threads)
+	} else {
+		command += " -t 10"
+	}
+	if engines != "" {
+		command += fmt.Sprintf(" -e %s", engines)
+	}
+	if verbose {
+		command += " -v"
+	}
+	if additionalArgs != "" {
+		command += fmt.Sprintf(" %s", additionalArgs)
+	}
+
+	result, err := executor.ExecuteCommand(command)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 func HealthCheckHandler(c *gin.Context) {
 
 essentialTools := []string{"nmap", "gobuster", "dirb", "nikto"}

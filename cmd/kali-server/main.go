@@ -80,6 +80,7 @@ func main() {
 		r.POST("/api/tools/john", handlers.JohnHandler)
 		r.POST("/api/tools/wpscan", handlers.WpscanHandler)
 		r.POST("/api/tools/enum4linux", handlers.Enum4linuxHandler)
+		r.POST("/api/tools/sublist3r", handlers.Sublist3rHandler)
 		r.GET("/health", handlers.HealthCheckHandler)
 
 		// Start the Gin server

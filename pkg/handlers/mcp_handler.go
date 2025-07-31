@@ -151,6 +151,19 @@ func NucleiScanHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.C
 	}, nil
 }
 
+// Sublist3rScanHandler handles Sublist3r subdomain enumeration requests
+func Sublist3rScanHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[tools.Sublist3rParams]) (*mcp.CallToolResultFor[any], error) {
+	result, err := tools.Sublist3rScan(params.Arguments)
+	if err != nil {
+		return nil, err
+	}
+	return &mcp.CallToolResultFor[any]{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: formatToolResult(result)},
+		},
+	}, nil
+}
+
 // ExecuteCommandHandler handles generic command execution requests
 func ExecuteCommandHandler(ctx context.Context, ss *mcp.ServerSession, params *mcp.CallToolParamsFor[tools.GenericCommandParams]) (*mcp.CallToolResultFor[any], error) {
 	result, err := tools.ExecuteGenericCommand(params.Arguments)
@@ -222,6 +235,11 @@ func InitializeServer() *mcp.Server {
 		Name:        "nuclei_scan",
 		Description: "Execute Nuclei template-based vulnerability scanner",
 	}, NucleiScanHandler)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "sublist3r_scan",
+		Description: "Execute Sublist3r for subdomain enumeration",
+	}, Sublist3rScanHandler)
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "execute_command",
