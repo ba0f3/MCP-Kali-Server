@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,17 +11,77 @@ import (
 
 	"github.com/ba0f3/MCP-Kali-Server/pkg/executor"
 	"github.com/ba0f3/MCP-Kali-Server/pkg/handlers"
+	"github.com/ba0f3/MCP-Kali-Server/pkg/service"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+// handleServiceInstall installs the server as a system service
+func handleServiceInstall(serviceName, servicePort string) error {
+	config := service.GetDefaultConfig()
+	config.Name = serviceName
+
+	// Set service arguments to use HTTP mode with the specified port
+	config.Args = []string{
+		"-http", servicePort,
+		"-timeout", "900",
+	}
+
+	fmt.Printf("Installing %s service...\n", serviceName)
+	fmt.Printf("Service will listen on port: %s\n", servicePort)
+	fmt.Printf("Executable: %s\n", config.Executable)
+	fmt.Printf("Working directory: %s\n", config.WorkingDir)
+
+	if err := service.InstallService(config); err != nil {
+		return fmt.Errorf("installation failed: %w", err)
+	}
+
+	fmt.Printf("\nService '%s' installed successfully!\n", serviceName)
+	fmt.Println("\nTo start the service:")
+	fmt.Printf("  Windows: sc start %s\n", serviceName)
+	fmt.Printf("  Linux: sudo systemctl start %s\n", serviceName)
+	fmt.Printf("  macOS: sudo launchctl start %s\n", serviceName)
+
+	return nil
+}
+
+// handleServiceUninstall removes the installed service
+func handleServiceUninstall(serviceName string) error {
+	fmt.Printf("Uninstalling %s service...\n", serviceName)
+
+	if err := service.UninstallService(serviceName); err != nil {
+		return fmt.Errorf("uninstallation failed: %w", err)
+	}
+
+	fmt.Printf("Service '%s' uninstalled successfully!\n", serviceName)
+	return nil
+}
 
 func main() {
 	var (
 		debug = flag.Bool("debug", false, "Enable debug logging")
 		httpAddr = flag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
 		timeout = flag.Int("timeout", 900, "Command execution timeout in seconds")
+		installService = flag.Bool("install-service", false, "Install the server as a system service")
+		uninstallService = flag.Bool("uninstall-service", false, "Uninstall the system service")
+		serviceName = flag.String("service-name", "mcp-kali-server", "Name of the service")
+		servicePort = flag.String("service-port", ":8080", "Port for the service to listen on (used with -install-service)")
 	)
 	flag.Parse()
+
+	// Handle service installation/uninstallation
+	if *installService {
+		if err := handleServiceInstall(*serviceName, *servicePort); err != nil {
+			log.Fatalf("Failed to install service: %v", err)
+		}
+		return
+	}
+
+	if *uninstallService {
+		if err := handleServiceUninstall(*serviceName); err != nil {
+			log.Fatalf("Failed to uninstall service: %v", err)
+		}
+		return
+	}
 
 	// Set the global command timeout
 	executor.SetGlobalTimeout(time.Duration(*timeout) * time.Second)
