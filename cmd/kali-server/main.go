@@ -1,10 +1,13 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/ba0f3/MCP-Kali-Server/pkg/executor"
 	"github.com/ba0f3/MCP-Kali-Server/pkg/handlers"
 	"github.com/ba0f3/MCP-Kali-Server/pkg/middleware"
 	"github.com/gin-gonic/gin"
@@ -12,6 +15,14 @@ import (
 )
 
 func main() {
+	// Define command-line flags
+	timeout := flag.Int("timeout", 180, "Command execution timeout in seconds")
+	flag.Parse()
+
+	// Set the global command timeout
+	executor.SetGlobalTimeout(time.Duration(*timeout) * time.Second)
+	log.Printf("Command timeout set to %d seconds", *timeout)
+
 	// Determine mode of the server from environment variable or configuration
 	mode := os.Getenv("SERVER_MODE")
 

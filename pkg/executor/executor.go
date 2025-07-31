@@ -14,7 +14,12 @@ import (
 
 const (
 	// DefaultTimeout is the default command execution timeout
-	DefaultTimeout = 3 * time.Minute
+	DefaultTimeout = 15 * time.Minute
+)
+
+var (
+	// GlobalTimeout is the global command execution timeout that can be configured
+	GlobalTimeout = DefaultTimeout
 )
 
 // Result represents the result of a command execution
@@ -140,6 +145,11 @@ func (ce *CommandExecutor) readPipe(pipe io.Reader, builder *strings.Builder) {
 
 // ExecuteCommand is a convenience function to execute a command
 func ExecuteCommand(command string) (*Result, error) {
-	executor := NewCommandExecutor(command, DefaultTimeout)
+	executor := NewCommandExecutor(command, GlobalTimeout)
 	return executor.Execute()
+}
+
+// SetGlobalTimeout sets the global command execution timeout
+func SetGlobalTimeout(timeout time.Duration) {
+	GlobalTimeout = timeout
 }

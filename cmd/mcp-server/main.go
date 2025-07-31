@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/ba0f3/MCP-Kali-Server/pkg/executor"
 	"github.com/ba0f3/MCP-Kali-Server/pkg/handlers"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -16,12 +18,17 @@ func main() {
 	var (
 		debug = flag.Bool("debug", false, "Enable debug logging")
 		httpAddr = flag.String("http", "", "if set, use streamable HTTP at this address, instead of stdin/stdout")
+		timeout = flag.Int("timeout", 180, "Command execution timeout in seconds")
 	)
 	flag.Parse()
 
 	if *debug {
 		log.Println("Debug mode enabled")
 	}
+
+	// Set the global command timeout
+	executor.SetGlobalTimeout(time.Duration(*timeout) * time.Second)
+	log.Printf("Command timeout set to %d seconds", *timeout)
 
 	// Initialize MCP server
 	server := mcp.NewServer(&mcp.Implementation{Name: "kali-tools"}, nil)
