@@ -17,6 +17,7 @@ MCP-Kali-Server is a Go-based server application that integrates various Kali Li
   - John the Ripper
   - WPScan
   - Enum4linux
+  - Sublist3r
 
 ## Project Structure
 
@@ -122,6 +123,11 @@ curl -H "Authorization: Bearer your-bearer-token" http://localhost:5000/api/tool
 - WPScan analysis:
   ```bash
   curl -X POST http://localhost:5000/api/tools/wpscan -d '{"url": "http://example.com"}'
+  ```
+
+- Sublist3r subdomain enumeration:
+  ```bash
+  curl -X POST http://localhost:5000/api/tools/sublist3r -d '{"domain": "example.com", "bruteforce": false, "threads": 10}'
   ```
 
 ## License

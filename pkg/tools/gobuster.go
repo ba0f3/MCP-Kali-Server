@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ba0f3/MCP-Kali-Server/pkg/executor"
+	"github.com/ba0f3/MCP-Kali-Server/pkg/helpers"
 )
 
 // GobusterParams represents parameters for Gobuster scan
@@ -28,11 +29,18 @@ func GobusterScan(params GobusterParams) (*ToolResult, error) {
 		params.Wordlist = "/usr/share/wordlists/dirb/common.txt"
 	}
 
-	var url string
+	var param string
 	if params.Mode == "dns" {
-		url = "-do " + params.URL
+		domain, err := helpers.ParseDomain(params.URL)
+		if err != nil {
+			return nil, err
+		}
+		if domain == "" {
+			return nil, fmt.Errorf("invalid URL: %s", params.URL)
+		}
+		param = "-d " + domain
 	} else {
-		url = "-u " + params.URL
+		param = "-u " + params.URL
 	}
 
 	// Validate mode
@@ -41,7 +49,7 @@ func GobusterScan(params GobusterParams) (*ToolResult, error) {
 		return nil, fmt.Errorf("invalid mode: %s. Must be one of: dir, dns, fuzz, vhost", params.Mode)
 	}
 
-	command := fmt.Sprintf("gobuster %s %s -w %s", params.Mode, url, params.Wordlist)
+	command := fmt.Sprintf("gobuster %s %s -w %s", params.Mode, param, params.Wordlist)
 	if params.AdditionalArgs != "" {
 		command += fmt.Sprintf(" %s", params.AdditionalArgs)
 	}
