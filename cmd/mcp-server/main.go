@@ -11,7 +11,9 @@ import (
 
 	"github.com/ba0f3/MCP-Kali-Server/pkg/executor"
 	"github.com/ba0f3/MCP-Kali-Server/pkg/handlers"
+	"github.com/ba0f3/MCP-Kali-Server/pkg/middleware"
 	"github.com/ba0f3/MCP-Kali-Server/pkg/service"
+	"github.com/gin-gonic/gin"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -189,11 +191,26 @@ func main() {
 
 
 	if *httpAddr != "" {
-		handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+		// Set Gin to release mode for cleaner logs
+		gin.SetMode(gin.ReleaseMode)
+		ginHandler := gin.New()
+		
+		// Configure authentication
+		authConfig := middleware.NewAuthConfig()
+		if authConfig != nil {
+			log.Printf("Authentication: Enabled (%s)", authConfig.AuthType)
+			ginHandler.Use(middleware.AuthMiddleware(authConfig))
+		} else {
+			log.Println("Authentication: Disabled (No AUTH_SECRET set)")
+			log.Println("WARNING: MCP Server is running without authentication!")
+		}
+
+		// Use Gin to wrap the MCP handler
+		ginHandler.Any("/*proxyPath", gin.WrapH(mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 			return server
-		}, nil)
+		}, nil)))
 		log.Printf("Starting MCP Server with Kali Linux tools and listening at %s", *httpAddr)
-		if err := http.ListenAndServe(*httpAddr, handler); err != nil {
+		if err := http.ListenAndServe(*httpAddr, ginHandler); err != nil {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	} else {

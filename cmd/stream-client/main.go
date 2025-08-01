@@ -109,18 +109,37 @@ type MCPClient struct {
 	requestID  int
 	debug      bool
 	sessionID  string
+	authType   string
+	authSecret string
 }
 
 // NewMCPClient creates a new MCP client
 func NewMCPClient(serverURL string, debug bool) *MCPClient {
-	return &MCPClient{
+	// Get auth configuration from environment
+	authType := os.Getenv("AUTH_TYPE")
+	authSecret := os.Getenv("AUTH_SECRET")
+	
+	// Default to apikey if authSecret is set but authType is not
+	if authSecret != "" && authType == "" {
+		authType = "apikey"
+	}
+	
+	client := &MCPClient{
 		serverURL: serverURL,
 		httpClient: &http.Client{
 			Timeout: 300 * time.Second, // 5 minute timeout for long-running operations
 		},
-		requestID: 0,
-		debug:     debug,
+		requestID:  0,
+		debug:      debug,
+		authType:   authType,
+		authSecret: authSecret,
 	}
+	
+	if debug && authSecret != "" {
+		log.Printf("Authentication configured: %s", authType)
+	}
+	
+	return client
 }
 
 // sendNotification sends a JSON-RPC notification (no response expected)
@@ -161,6 +180,16 @@ func (c *MCPClient) sendNotification(method string, params interface{}) error {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json, text/event-stream")
+
+	// Set authentication header if configured
+	if c.authSecret != "" {
+		switch c.authType {
+		case "apikey":
+			req.Header.Set("X-API-Key", c.authSecret)
+		case "bearer":
+			req.Header.Set("Authorization", "Bearer " + c.authSecret)
+		}
+	}
 	
 	// Add session ID if available
 	if c.sessionID != "" {
@@ -231,8 +260,17 @@ func (c *MCPClient) sendRequest(method string, params interface{}) (*JSONRPCResp
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json, text/event-stream")
-	
+req.Header.Set("Accept", "application/json, text/event-stream")
+
+	// Set authentication header if configured
+	if c.authSecret != "" {
+		switch c.authType {
+		case "apikey":
+			req.Header.Set("X-API-Key", c.authSecret)
+		case "bearer":
+			req.Header.Set("Authorization", "Bearer " + c.authSecret)
+		}
+	}
 	// Add session ID if available
 	if c.sessionID != "" {
 		req.Header.Set("Mcp-Session-Id", c.sessionID)
